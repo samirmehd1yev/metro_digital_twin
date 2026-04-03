@@ -50,7 +50,7 @@ export default function StationList({ simState, scenario }: Props) {
   if (scenario === "peak" || scenario === "event") {
     stationsWithLoad.sort((a, b) => b.load - a.load);
   } else {
-    stationsWithLoad.sort((a, b) => a.nameAz.localeCompare(b.nameAz, "en"));
+    stationsWithLoad.sort((a, b) => a.name.localeCompare(b.name, "en"));
   }
 
   return (
@@ -62,7 +62,7 @@ export default function StationList({ simState, scenario }: Props) {
             style={dotStyle(s.line)}
           />
           <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300 flex-1 truncate transition-colors font-mono">
-            {s.nameAz}
+            {s.name}
           </span>
           <div className="w-20 h-1 bg-zinc-800/50 rounded-full overflow-hidden flex-shrink-0">
             <div
