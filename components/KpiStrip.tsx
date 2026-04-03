@@ -11,10 +11,25 @@ interface Props {
 const SCENARIO_INTERVALS: Record<Scenario, number> = { normal: 4, peak: 2, event: 3, delay: 6 };
 const SCENARIO_AGENTS: Record<Scenario, number> = { normal: 22, peak: 60, event: 45, delay: 18 };
 
+function resilienceColor(score: number): string {
+  if (score >= 80) return "text-emerald-400";
+  if (score >= 60) return "text-amber-400";
+  if (score >= 40) return "text-orange-400";
+  return "text-red-400";
+}
+
+function resilienceGlow(score: number): string {
+  if (score >= 80) return "";
+  if (score >= 60) return "shadow-[0_0_20px_rgba(255,184,0,0.1)]";
+  return "shadow-[0_0_20px_rgba(255,68,68,0.15)]";
+}
+
 export default function KpiStrip({ simState, scenario }: Props) {
   const avgLoad = simState
     ? Math.round(simState.stations.reduce((s, st) => s + st.load, 0) / simState.stations.length)
     : null;
+
+  const resilience = simState?.resilience ?? null;
 
   const loadColor = avgLoad === null ? "text-zinc-600"
     : avgLoad >= 90 ? "text-red-400" : avgLoad >= 75 ? "text-orange-400"
@@ -29,8 +44,8 @@ export default function KpiStrip({ simState, scenario }: Props) {
     { label: "Active Agents", value: `${SCENARIO_AGENTS[scenario]}`, color: "text-blue-400" },
     { label: "Train Interval", value: `${SCENARIO_INTERVALS[scenario]}`, unit: "min", color: "text-purple-400" },
     { label: "Stations Online", value: simState ? `${simState.stations.length}` : "—", unit: "/21", color: "text-emerald-400" },
-    { label: "Sim Tick", value: simState ? `${simState.tick}` : "—", color: "text-zinc-400" },
-    { label: "Scenario", value: scenario.toUpperCase(), color: scenario === "delay" ? "text-orange-400" : scenario === "event" ? "text-red-400" : scenario === "peak" ? "text-amber-400" : "text-emerald-400" },
+    { label: "Resilience", value: resilience !== null ? `${resilience}` : "—", unit: "/100", color: resilience !== null ? resilienceColor(resilience) : "text-zinc-600", glow: resilience !== null ? resilienceGlow(resilience) : "" },
+    { label: "Alarms", value: simState ? `${simState.alarms.filter((a) => a.level === "critical").length}` : "0", unit: " crit", color: simState && simState.alarms.some((a) => a.level === "critical") ? "text-red-400" : "text-zinc-500" },
   ];
 
   return (
@@ -38,14 +53,9 @@ export default function KpiStrip({ simState, scenario }: Props) {
       {cards.map((card) => (
         <div
           key={card.label}
-          className={clsx(
-            "bg-[#0a0d14] border border-zinc-800/50 rounded-lg p-2.5",
-            card.glow,
-          )}
+          className={clsx("bg-[#0a0d14] border border-zinc-800/50 rounded-lg p-2.5", card.glow)}
         >
-          <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1">
-            {card.label}
-          </div>
+          <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1">{card.label}</div>
           <div className={clsx("text-lg font-mono font-bold tabular-nums", card.color)}>
             {card.value}
             {card.unit && <span className="text-xs text-zinc-600 ml-0.5">{card.unit}</span>}
