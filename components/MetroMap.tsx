@@ -319,13 +319,13 @@ export default function MetroMap({ simState, scenario, width = 940, height = 500
         ctx.textAlign = "center";
         const nameY = pos.y <= 100 ? pos.y + r + 14 : pos.y - r - 10;
         ctx.textBaseline = pos.y <= 100 ? "top" : "bottom";
-        const nameW = ctx.measureText(station.nameAz).width;
+        const nameW = ctx.measureText(station.name).width;
         // Label background
         const bgY = pos.y <= 100 ? nameY - 1 : nameY - 11;
         ctx.fillStyle = "#0c0c0f90";
         ctx.fillRect(pos.x - nameW / 2 - 3, bgY, nameW + 6, 13);
         ctx.fillStyle = "#a1a1aa";
-        ctx.fillText(station.nameAz, pos.x, nameY);
+        ctx.fillText(station.name, pos.x, nameY);
 
         // Load % badge — shown for high load stations
         if (load >= 60) {
@@ -335,8 +335,18 @@ export default function MetroMap({ simState, scenario, width = 940, height = 500
           ctx.font = "bold 10px 'Courier New', monospace";
           // Badge background
           ctx.fillStyle = load >= 90 ? "#FF444430" : load >= 75 ? "#FF8C0025" : "#FFB80020";
+          const bx = pos.x - tw / 2 - 4, by = badgeY - 7, bw = tw + 8, bh = 14, br = 3;
           ctx.beginPath();
-          ctx.roundRect(pos.x - tw / 2 - 4, badgeY - 7, tw + 8, 14, 3);
+          ctx.moveTo(bx + br, by);
+          ctx.lineTo(bx + bw - br, by);
+          ctx.arcTo(bx + bw, by, bx + bw, by + br, br);
+          ctx.lineTo(bx + bw, by + bh - br);
+          ctx.arcTo(bx + bw, by + bh, bx + bw - br, by + bh, br);
+          ctx.lineTo(bx + br, by + bh);
+          ctx.arcTo(bx, by + bh, bx, by + bh - br, br);
+          ctx.lineTo(bx, by + br);
+          ctx.arcTo(bx, by, bx + br, by, br);
+          ctx.closePath();
           ctx.fill();
           ctx.fillStyle = color;
           ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -346,11 +356,11 @@ export default function MetroMap({ simState, scenario, width = 940, height = 500
 
       // ── Legend — top left ─────────────────────────────────────
       const legendItems: Array<{ color: string; label: string }> = [
-        { color: LINE_COLORS.red, label: "QIRMIZI XƏTT" },
-        { color: LINE_COLORS.green, label: "YAŞIL XƏTT" },
-        { color: LINE_COLORS.purple, label: "BƏNÖVŞƏYI XƏTT" },
+        { color: LINE_COLORS.red, label: "RED LINE" },
+        { color: LINE_COLORS.green, label: "GREEN LINE" },
+        { color: LINE_COLORS.purple, label: "PURPLE LINE" },
       ];
-      if (scn === "delay") legendItems.push({ color: "#FF8C00", label: "GECİKMƏ ZONASI" });
+      if (scn === "delay") legendItems.push({ color: "#FF8C00", label: "DELAY ZONE" });
 
       let lx = 14;
       ctx.font = "bold 8px 'Courier New', monospace";
