@@ -11,21 +11,19 @@ interface Props {
   onTimeChange: (minutes: number) => void;
 }
 
-const SCENARIOS: Array<{ key: Scenario; label: string }> = [
-  { key: "normal", label: "Adi gün" },
-  { key: "peak", label: "Pik saat" },
-  { key: "event", label: "Böyük tədbir" },
-  { key: "delay", label: "Qatar gecikməsi" },
+const SCENARIOS: Array<{ key: Scenario; label: string; icon: string }> = [
+  { key: "normal", label: "Normal", icon: "●" },
+  { key: "peak", label: "Rush Hour", icon: "▲" },
+  { key: "event", label: "Stadium Event", icon: "◆" },
+  { key: "delay", label: "Train Delay", icon: "⚠" },
 ];
 
 const ACTIVE_STYLES: Record<Scenario, string> = {
-  normal: "bg-emerald-900/40 text-emerald-400 border-emerald-700",
-  peak: "bg-amber-900/40 text-amber-400 border-amber-700",
-  event: "bg-red-900/40 text-red-400 border-red-700",
-  delay: "bg-zinc-800 text-zinc-200 border-zinc-600",
+  normal: "bg-emerald-500/10 text-emerald-400 border-emerald-500/40 shadow-[0_0_12px_rgba(46,204,136,0.1)]",
+  peak: "bg-amber-500/10 text-amber-400 border-amber-500/40 shadow-[0_0_12px_rgba(255,184,0,0.1)]",
+  event: "bg-red-500/10 text-red-400 border-red-500/40 shadow-[0_0_12px_rgba(255,68,68,0.1)]",
+  delay: "bg-orange-500/10 text-orange-400 border-orange-500/40 shadow-[0_0_12px_rgba(255,140,0,0.1)]",
 };
-
-const PEAK_MINUTES = [450, 510, 540, 1020, 1080, 1140];
 
 function formatTime(min: number): string {
   const h = Math.floor(min / 60);
@@ -36,71 +34,49 @@ function formatTime(min: number): string {
 export default function ControlBar({
   scenario,
   simTimeMin,
-  simState,
   onScenarioChange,
   onTimeChange,
 }: Props) {
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
       {/* Scenario buttons */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 w-full">
+      <div className="grid grid-cols-2 sm:flex gap-1.5">
         {SCENARIOS.map((s) => (
           <button
             key={s.key}
             onClick={() => onScenarioChange(s.key)}
             className={clsx(
-              "border rounded-lg text-sm py-1.5 px-1 transition-colors",
+              "border rounded px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider transition-all duration-200",
               scenario === s.key
                 ? ACTIVE_STYLES[s.key]
-                : "bg-transparent text-zinc-500 border-zinc-700 hover:bg-zinc-800",
+                : "bg-transparent text-zinc-600 border-zinc-800 hover:border-zinc-700 hover:text-zinc-400",
             )}
           >
+            <span className="mr-1.5">{s.icon}</span>
             {s.label}
           </button>
         ))}
       </div>
 
-      {/* Time slider row */}
-      <div className="flex items-center gap-2">
-        <span className="font-mono text-zinc-500 text-xs whitespace-nowrap">
-          Sim vaxtı:
-        </span>
-        <div className="relative flex-1">
-          {/* Peak hour indicators */}
-          <div className="absolute inset-0 flex items-center pointer-events-none">
-            {PEAK_MINUTES.map((pm) => {
-              const pct = ((pm - 300) / (1380 - 300)) * 100;
-              return (
-                <div
-                  key={pm}
-                  className="absolute w-1 h-1 rounded-full bg-amber-500"
-                  style={{ left: `${pct}%` }}
-                />
-              );
-            })}
-          </div>
-          <input
-            type="range"
-            min={300}
-            max={1380}
-            step={15}
-            value={simTimeMin}
-            onChange={(e) => onTimeChange(Number(e.target.value))}
-            className="w-full accent-emerald-500"
-          />
-        </div>
-        <span className="font-mono font-medium text-sm min-w-[3rem] text-right text-zinc-300">
-          {formatTime(simTimeMin)}
-        </span>
-      </div>
+      {/* Divider */}
+      <div className="hidden sm:block h-6 w-px bg-zinc-800" />
 
-      {/* Status badges */}
-      <div className="flex gap-2">
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-900/40 text-emerald-400 border border-emerald-800/50">
-          sinx {simState?.syncedAgo ?? "—"}s əvvəl
+      {/* Time slider */}
+      <div className="flex items-center gap-2 flex-1">
+        <span className="text-[10px] text-zinc-600 uppercase tracking-wider whitespace-nowrap">
+          Sim Time
         </span>
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-900/40 text-blue-400 border border-blue-800/50">
-          +{simState?.twinAheadMin ?? "—"}m öndə
+        <input
+          type="range"
+          min={300}
+          max={1380}
+          step={15}
+          value={simTimeMin}
+          onChange={(e) => onTimeChange(Number(e.target.value))}
+          className="flex-1 accent-emerald-500 h-1"
+        />
+        <span className="text-sm font-mono text-emerald-400 min-w-[3.5rem] text-right tabular-nums">
+          {formatTime(simTimeMin)}
         </span>
       </div>
     </div>
