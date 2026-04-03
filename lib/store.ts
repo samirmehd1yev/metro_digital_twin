@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Scenario, SimState, ForecastPoint } from "./types";
+import type { Scenario, SimState, ForecastPoint, ViewMode } from "./types";
 
 interface TwinStore {
   simState: SimState | null;
@@ -9,14 +9,32 @@ interface TwinStore {
   lastError: string | null;
   forecastPoints: ForecastPoint[];
 
+  // Advanced features
+  viewMode: ViewMode;
+  isPlaying: boolean;
+  playbackSpeed: number;
+  selectedStation: string | null;
+  compareMode: boolean;
+  compareScenario: Scenario;
+  compareState: SimState | null;
+  stationHistory: Record<string, number[]>;
+
+  // Actions
   setScenario: (s: Scenario) => void;
   setSimTime: (minutes: number) => void;
   fetchState: () => Promise<void>;
   fetchForecast: () => Promise<void>;
   startPolling: () => () => void;
+  setViewMode: (mode: ViewMode) => void;
+  setPlaying: (playing: boolean) => void;
+  setPlaybackSpeed: (speed: number) => void;
+  setSelectedStation: (id: string | null) => void;
+  setCompareMode: (on: boolean) => void;
+  setCompareScenario: (s: Scenario) => void;
 }
 
 let pollInterval: ReturnType<typeof setInterval> | null = null;
+let playbackInterval: ReturnType<typeof setInterval> | null = null;
 let pollCount = 0;
 
 export const useTwinStore = create<TwinStore>((set, get) => ({
@@ -27,6 +45,15 @@ export const useTwinStore = create<TwinStore>((set, get) => ({
   lastError: null,
   forecastPoints: [],
 
+  viewMode: "topology",
+  isPlaying: false,
+  playbackSpeed: 1,
+  selectedStation: null,
+  compareMode: false,
+  compareScenario: "peak",
+  compareState: null,
+  stationHistory: {},
+
   setScenario: (s: Scenario) => {
     set({ scenario: s });
     fetch("/api/scenario", {
@@ -35,7 +62,6 @@ export const useTwinStore = create<TwinStore>((set, get) => ({
       body: JSON.stringify({ scenario: s }),
     })
       .then(() => {
-        // Immediately fetch new state and forecast after scenario switch
         get().fetchState();
         get().fetchForecast();
       })
@@ -63,7 +89,28 @@ export const useTwinStore = create<TwinStore>((set, get) => ({
       const res = await fetch("/api/state");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: SimState = await res.json();
-      set({ simState: data, lastError: null, isLoading: false });
+
+      // Update station history
+      const history = { ...get().stationHistory };
+      for (const st of data.stations) {
+        if (!history[st.id]) history[st.id] = [];
+        history[st.id].push(st.load);
+        if (history[st.id].length > 60) history[st.id] = history[st.id].slice(-60);
+      }
+
+      set({ simState: data, lastError: null, isLoading: false, stationHistory: history });
+
+      // Fetch compare state if compare mode is on
+      if (get().compareMode) {
+        const { compareScenario, simTimeMin } = get();
+        try {
+          const cRes = await fetch(`/api/snapshot?scenario=${compareScenario}&simTime=${simTimeMin}`);
+          if (cRes.ok) {
+            const cData = await cRes.json();
+            set({ compareState: cData });
+          }
+        } catch { /* ignore */ }
+      }
     } catch (err) {
       set({ lastError: (err as Error).message, isLoading: false });
     }
@@ -73,22 +120,15 @@ export const useTwinStore = create<TwinStore>((set, get) => ({
     const { scenario, simTimeMin } = get();
     const fromHour = Math.floor(simTimeMin / 60);
     try {
-      const res = await fetch(
-        `/api/forecast?scenario=${scenario}&fromHour=${fromHour}`,
-      );
+      const res = await fetch(`/api/forecast?scenario=${scenario}&fromHour=${fromHour}`);
       if (!res.ok) return;
       const data = await res.json();
       set({ forecastPoints: data.points ?? [] });
-    } catch {
-      // keep existing forecast
-    }
+    } catch { /* keep existing */ }
   },
 
   startPolling: () => {
-    if (pollInterval) {
-      clearInterval(pollInterval);
-      pollInterval = null;
-    }
+    if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
 
     const store = get();
     store.fetchState();
@@ -102,16 +142,48 @@ export const useTwinStore = create<TwinStore>((set, get) => ({
     pollInterval = setInterval(() => {
       pollCount++;
       get().fetchState();
-      if (pollCount % 10 === 0) {
-        get().fetchForecast();
-      }
+      if (pollCount % 10 === 0) get().fetchForecast();
     }, ms);
 
     return () => {
-      if (pollInterval) {
-        clearInterval(pollInterval);
-        pollInterval = null;
-      }
+      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+      if (playbackInterval) { clearInterval(playbackInterval); playbackInterval = null; }
     };
+  },
+
+  setViewMode: (mode: ViewMode) => set({ viewMode: mode }),
+
+  setPlaying: (playing: boolean) => {
+    set({ isPlaying: playing });
+    if (playbackInterval) { clearInterval(playbackInterval); playbackInterval = null; }
+
+    if (playing) {
+      playbackInterval = setInterval(() => {
+        const { simTimeMin, playbackSpeed } = get();
+        const next = (simTimeMin + playbackSpeed * 15) % 1440;
+        get().setSimTime(next);
+      }, 2000);
+    }
+  },
+
+  setPlaybackSpeed: (speed: number) => {
+    set({ playbackSpeed: speed });
+    const { isPlaying } = get();
+    if (isPlaying) {
+      get().setPlaying(false);
+      get().setPlaying(true);
+    }
+  },
+
+  setSelectedStation: (id: string | null) => set({ selectedStation: id }),
+
+  setCompareMode: (on: boolean) => {
+    set({ compareMode: on, compareState: on ? get().compareState : null });
+    if (on) get().fetchState();
+  },
+
+  setCompareScenario: (s: Scenario) => {
+    set({ compareScenario: s });
+    if (get().compareMode) get().fetchState();
   },
 }));
