@@ -1,4 +1,3 @@
-import { kv } from "@vercel/kv";
 import { generateForecast } from "@/lib/simulation";
 import type { Scenario } from "@/lib/types";
 
@@ -13,24 +12,7 @@ export async function GET(request: Request) {
     return Response.json({ error: "invalid params" }, { status: 400 });
   }
 
-  const cacheKey = `twin:forecast:${scenario}:${fromHour}`;
-
-  try {
-    const cached = await kv.get<string>(cacheKey);
-    if (cached) {
-      return Response.json({ points: JSON.parse(cached as string) });
-    }
-  } catch {
-    // KV unavailable
-  }
-
   const points = generateForecast(scenario, fromHour);
-
-  try {
-    await kv.set(cacheKey, JSON.stringify(points), { ex: 300 });
-  } catch {
-    // KV unavailable
-  }
 
   return Response.json({ points });
 }
