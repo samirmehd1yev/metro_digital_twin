@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <rect width="32" height="32" rx="8" fill="#09090b"/>
+  <circle cx="16" cy="14" r="9" stroke="#10b981" stroke-width="1.5" fill="none"/>
+  <circle cx="16" cy="14" r="5" stroke="#C04040" stroke-width="1.5" fill="none"/>
+  <circle cx="16" cy="14" r="1.5" fill="#7F77DD"/>
+  <line x1="16" y1="5" x2="16" y2="23" stroke="#10b981" stroke-width="0.75" opacity="0.4"/>
+  <line x1="7" y1="14" x2="25" y2="14" stroke="#C04040" stroke-width="0.75" opacity="0.4"/>
+  <text x="16" y="29" text-anchor="middle" font-size="5" font-family="monospace" font-weight="bold" fill="#a1a1aa">BM</text>
+</svg>
