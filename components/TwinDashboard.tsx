@@ -28,14 +28,14 @@ export default function TwinDashboard() {
   }, [startPolling]);
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-4 font-sans text-zinc-100">
+    <div className="min-h-screen bg-zinc-950 p-3 sm:p-4 font-sans text-zinc-100 max-w-7xl mx-auto">
       {/* Loading bar */}
       {!simState && isLoading && (
         <div className="fixed top-0 left-0 w-full h-0.5 bg-emerald-400 animate-pulse z-50" />
       )}
 
       {/* Row 1 — Header */}
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
         <h1 className="font-medium text-sm text-zinc-100">
           Bak&#305; Metropoliteni &mdash; Digital Twin
         </h1>
@@ -61,20 +61,22 @@ export default function TwinDashboard() {
       </div>
 
       {/* Row 3 — Metro map card */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 mb-3">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-2 sm:p-3 mb-3 overflow-x-auto">
         <div className="text-[10px] font-mono text-zinc-500 uppercase mb-1">
           Metro xəritəsi — Real vaxt
         </div>
-        <MetroMap simState={simState} scenario={scenario} />
+        <div className="min-w-[600px]">
+          <MetroMap simState={simState} scenario={scenario} />
+        </div>
       </div>
 
       {/* Row 4 — KPI Strip */}
       <div className="mb-3">
-        <KpiStrip simState={simState} />
+        <KpiStrip simState={simState} scenario={scenario} />
       </div>
 
       {/* Row 5 — Two-column grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-3">
         {/* Left column */}
         <div className="flex flex-col gap-3">
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3">

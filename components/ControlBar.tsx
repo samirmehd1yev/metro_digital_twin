@@ -43,13 +43,13 @@ export default function ControlBar({
   return (
     <div className="space-y-2">
       {/* Scenario buttons */}
-      <div className="flex gap-1.5 w-full">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 w-full">
         {SCENARIOS.map((s) => (
           <button
             key={s.key}
             onClick={() => onScenarioChange(s.key)}
             className={clsx(
-              "border rounded-lg text-sm py-1.5 px-1 flex-1 transition-colors",
+              "border rounded-lg text-sm py-1.5 px-1 transition-colors",
               scenario === s.key
                 ? ACTIVE_STYLES[s.key]
                 : "bg-transparent text-zinc-500 border-zinc-700 hover:bg-zinc-800",

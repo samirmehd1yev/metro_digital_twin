@@ -5,9 +5,10 @@ import type { SimState, Scenario } from "@/lib/types";
 
 interface Props {
   simState: SimState | null;
+  scenario: Scenario;
 }
 
-const SCENARIO_INTERVALS: Record<string, number> = {
+const SCENARIO_INTERVALS: Record<Scenario, number> = {
   normal: 4,
   peak: 2,
   event: 3,
@@ -21,7 +22,7 @@ function loadValueColor(avg: number): string {
   return "text-emerald-400";
 }
 
-export default function KpiStrip({ simState }: Props) {
+export default function KpiStrip({ simState, scenario }: Props) {
   const avgLoad = simState
     ? Math.round(simState.stations.reduce((s, st) => s + st.load, 0) / simState.stations.length)
     : null;
@@ -32,8 +33,7 @@ export default function KpiStrip({ simState }: Props) {
       )
     : null;
 
-  const scenario = (simState?.scenario ?? "normal") as Scenario;
-  const interval = SCENARIO_INTERVALS[scenario] ?? 4;
+  const interval = SCENARIO_INTERVALS[scenario];
 
   const cards: Array<{ label: string; value: string; colorClass?: string }> = [
     {
@@ -48,7 +48,7 @@ export default function KpiStrip({ simState }: Props) {
     },
     {
       label: "Qatar intervalı",
-      value: simState ? `${interval} dəq` : "—",
+      value: `${interval} dəq`,
       colorClass: "text-zinc-100",
     },
     {

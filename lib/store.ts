@@ -33,7 +33,13 @@ export const useTwinStore = create<TwinStore>((set, get) => ({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ scenario: s }),
-    }).catch(() => {});
+    })
+      .then(() => {
+        // Immediately fetch new state and forecast after scenario switch
+        get().fetchState();
+        get().fetchForecast();
+      })
+      .catch(() => {});
   },
 
   setSimTime: (minutes: number) => {
@@ -43,7 +49,12 @@ export const useTwinStore = create<TwinStore>((set, get) => ({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ scenario, simTime: minutes }),
-    }).catch(() => {});
+    })
+      .then(() => {
+        get().fetchState();
+        get().fetchForecast();
+      })
+      .catch(() => {});
   },
 
   fetchState: async () => {
@@ -74,7 +85,6 @@ export const useTwinStore = create<TwinStore>((set, get) => ({
   },
 
   startPolling: () => {
-    // Clear any existing interval
     if (pollInterval) {
       clearInterval(pollInterval);
       pollInterval = null;
@@ -97,7 +107,6 @@ export const useTwinStore = create<TwinStore>((set, get) => ({
       }
     }, ms);
 
-    // Return cleanup function
     return () => {
       if (pollInterval) {
         clearInterval(pollInterval);
