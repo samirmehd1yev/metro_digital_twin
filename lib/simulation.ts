@@ -178,7 +178,7 @@ export class SimulationEngine {
       const agent = this.agents[i];
       let speed = agent.speed;
 
-      // Delay scenario: Koroğlu → Qara Qarayev slow down
+      // Delay scenario: Koroglu → Qara Qarayev slow down
       if (this._scenario === "delay" && agent.edgeIndex < agent.route.length - 1) {
         const from = agent.route[agent.edgeIndex];
         const to = agent.route[agent.edgeIndex + 1];
