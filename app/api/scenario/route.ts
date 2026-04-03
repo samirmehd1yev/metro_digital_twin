@@ -1,4 +1,3 @@
-import { kv } from "@vercel/kv";
 import { engine } from "@/lib/simulation";
 import type { Scenario } from "@/lib/types";
 
@@ -16,12 +15,6 @@ export async function POST(request: Request) {
 
   if (typeof body.simTime === "number") {
     engine.setSimTime(body.simTime);
-  }
-
-  try {
-    await kv.set("twin:scenario", scenario, { ex: 3600 });
-  } catch {
-    // KV unavailable
   }
 
   return Response.json({ ok: true, scenario });
