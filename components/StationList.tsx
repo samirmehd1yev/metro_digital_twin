@@ -9,31 +9,33 @@ interface Props {
 }
 
 function barColor(load: number): string {
-  if (load >= 90) return "bg-red-500";
+  if (load >= 90) return "bg-red-500 shadow-[0_0_6px_rgba(255,68,68,0.3)]";
   if (load >= 75) return "bg-orange-500";
   if (load >= 60) return "bg-amber-500";
   return "bg-emerald-500";
 }
 
-function dotStyle(line: string): React.CSSProperties {
-  if (line === "red") return { backgroundColor: "#C04040" };
-  if (line === "green") return { backgroundColor: "#1D9E75" };
-  if (line === "purple") return { backgroundColor: "#7F77DD" };
-  return {
-    background: "linear-gradient(90deg, #C04040 50%, #1D9E75 50%)",
-  };
+function dotColor(line: string): string {
+  if (line === "red") return "bg-red-400";
+  if (line === "green") return "bg-emerald-400";
+  if (line === "purple") return "bg-purple-400";
+  return "bg-gradient-to-r from-red-400 to-emerald-400";
+}
+
+function dotStyle(line: string): React.CSSProperties | undefined {
+  if (line === "shared") return { background: "linear-gradient(90deg, #E05555 50%, #2ECC88 50%)" };
+  return undefined;
 }
 
 export default function StationList({ simState, scenario }: Props) {
   if (!simState) {
     return (
-      <div className="max-h-64 overflow-y-auto space-y-1">
-        {Array.from({ length: 21 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-2 py-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-zinc-700 animate-pulse" />
-            <div className="flex-1 h-3 bg-zinc-800 animate-pulse rounded" />
-            <div className="w-16 h-1.5 bg-zinc-800 animate-pulse rounded-full" />
-            <div className="w-7 h-3 bg-zinc-800 animate-pulse rounded" />
+      <div className="space-y-1.5">
+        {Array.from({ length: 10 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-2 py-0.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-zinc-800 animate-pulse" />
+            <div className="flex-1 h-2.5 bg-zinc-800/50 animate-pulse rounded" />
+            <div className="w-14 h-1.5 bg-zinc-800/50 animate-pulse rounded-full" />
           </div>
         ))}
       </div>
@@ -48,27 +50,29 @@ export default function StationList({ simState, scenario }: Props) {
   if (scenario === "peak" || scenario === "event") {
     stationsWithLoad.sort((a, b) => b.load - a.load);
   } else {
-    stationsWithLoad.sort((a, b) => a.nameAz.localeCompare(b.nameAz, "az"));
+    stationsWithLoad.sort((a, b) => a.nameAz.localeCompare(b.nameAz, "en"));
   }
 
   return (
-    <div className="max-h-64 overflow-y-auto">
+    <div className="max-h-72 overflow-y-auto pr-1 scrollbar-thin">
       {stationsWithLoad.map((s) => (
-        <div key={s.id} className="flex items-center gap-2 py-1">
+        <div key={s.id} className="flex items-center gap-2 py-[3px] group">
           <div
-            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+            className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dotColor(s.line)}`}
             style={dotStyle(s.line)}
           />
-          <span className="text-xs text-zinc-300 flex-1 truncate">
+          <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300 flex-1 truncate transition-colors font-mono">
             {s.nameAz}
           </span>
-          <div className="w-16 h-1.5 bg-zinc-800 rounded-full overflow-hidden flex-shrink-0">
+          <div className="w-20 h-1 bg-zinc-800/50 rounded-full overflow-hidden flex-shrink-0">
             <div
-              className={`h-full rounded-full ${barColor(s.load)}`}
+              className={`h-full rounded-full transition-all duration-500 ${barColor(s.load)}`}
               style={{ width: `${s.load}%` }}
             />
           </div>
-          <span className="text-[10px] font-mono text-zinc-500 w-7 text-right flex-shrink-0">
+          <span className={`text-[10px] font-mono w-8 text-right flex-shrink-0 tabular-nums ${
+            s.load >= 90 ? "text-red-400" : s.load >= 75 ? "text-orange-400" : s.load >= 60 ? "text-amber-400" : "text-zinc-600"
+          }`}>
             {s.load}%
           </span>
         </div>
